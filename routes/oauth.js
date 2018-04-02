@@ -1,5 +1,5 @@
-modules.exports.github = github;
-modules.exports.google = google;
+module.exports.github = github;
+module.exports.google = google;
 
 
 // auth url: https://github.com/login/oauth/authorize?client_id=1bb56238ae4a63f3f744&redirect_uri=https%3A%2F%2Fdashboard.discordspark.tk%2Fcallback%2Fgithub&scope=user:email%20read:user
