@@ -6,7 +6,7 @@ const config = require("../config.json")
 require("request")
 
 // auth url: https://github.com/login/oauth/authorize?client_id=1bb56238ae4a63f3f744&redirect_uri=https%3A%2F%2Fdashboard.discordspark.tk%2Fcallback%2Fgithub&scope=user:email%20read:user
-async function github(req, res) {
+async function github(req, res, app) {
     if (!req.query.code) {
         return res.redirect("/")
     }
@@ -22,7 +22,9 @@ async function github(req, res) {
             },
             json: true
         })
-        if (!body.access_token) { return res.redirect("/") }
+        if (!body.access_token) {
+            return res.redirect("/")
+        }
         var user = await request({
             method: "GET",
             uri: "https://api.github.com/user",
@@ -32,9 +34,20 @@ async function github(req, res) {
                 "user-agent": "Spark Dashboard"
             }
         })
-        if (!user.email || !user.id) { return res.sendStatus(503) }
+        if (!user.email || !user.id) {
+            return res.sendStatus(503)
+        }
         // TODO: Add nice page here to show there is no email address linked.
-        verify("Github", user.email, user.id, app)
+        var result = verify("github", user.id, user.email, user.name, app, req)
+        result
+            .then(user => {
+                console.log(user)
+
+                res.send(`<html><body><p>Welcome <strong>${user.name}</strong>!</p><p>Some data we picked up:</p><p>email: <strong>${user.email}</strong></p><p>Github: <strong>${user.github_id}</strong></p><p>Api token: <strong>${user.token}</strong></p>`)
+            })
+            .catch(code => {
+                res.sendStatus(code)
+            })
 
 
 
@@ -48,7 +61,7 @@ async function github(req, res) {
 }
 
 // auth url: https://accounts.google.com/o/oauth2/v2/auth?client_id=463922476306-0di60822ajkofdqqhkh2cam6qik5eqps.apps.googleusercontent.com&redirect_uri=https://dashboard.discordspark.tk/callback/google&scope=profile%20email&state=1234&response_type=code
-async function google(req, res) {
+async function google(req, res, app) {
     if (!req.query.code) {
         return res.redirect("/")
     }
@@ -56,7 +69,13 @@ async function google(req, res) {
         var body = await request({
             method: "POST",
             uri: "https://www.googleapis.com/oauth2/v4/token",
-            body: { "code": req.query.code, "client_id": config.google.client_id, "client_secret": config.google.client_secret, "redirect_uri": "https://dashboard.discordspark.tk/callback/google", "grant_type": "authorization_code" },
+            body: {
+                "code": req.query.code,
+                "client_id": config.google.client_id,
+                "client_secret": config.google.client_secret,
+                "redirect_uri": "https://dashboard.discordspark.tk/callback/google",
+                "grant_type": "authorization_code"
+            },
             headers: {
                 "Content-Type": "application/json"
             },
