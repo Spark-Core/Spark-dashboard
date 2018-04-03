@@ -1,8 +1,110 @@
-<div class="container">
-    <h1 class="title is-1">Welcome back <%- user.name %></h1>
-    <h4 class="subtitle">Choose a bot you want to manage today.</h4>
+<nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+        <img src="https://beta.discordspark.tk/icons/Spark-icon-no-bg.svg" width="32" height="32">
+    </a>
 
-    <div class="bots">
+            <div data-target="navMenu" class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
+        <div class="navbar-menu" id="navMenu">
+            <div class="navbar-start">
+                <a href="/" class="navbar-item"> Home </a>
+            </div>
+            <div class="navbar-end">
+                <a class="navbar-item" href="https://dashboard.discordspark.tk/logout"><%- user.name %> <span style="color: black;margin-left:2px;margin-right:2px;">|</span> <span style="color: red;"> Logout</span></a>
+            </div>
+        </div>
+    </div>
+</nav>
+<section class="section hero is-light is-medium">
+    <div class="container">
+        <h1 class="title">Bots</h1>
+        <h4 class="subtitle">Your registered bots</h4>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <div class="circle" style=""><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+        </div>
+        <div class="columns second">
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+            <div class="column">
+                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
+            </div>
+        </div>
+
 
     </div>
-</div>
+</section>
+<style>
+    .circle {
+        height: 75px;
+        width: 75px;
+        border-radius: 50%;
+        background-color: #2C2F33;
+        margin: 0 auto;
+    }
+    html {
+        overflow: hidden !important;
+    }
+    .second {
+        margin-top: 5px;
+    }
+
+    .fa-plus {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        height: 30px;
+        width: 30px;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+        if ($navbarBurgers.length > 0) {
+            $navbarBurgers.forEach(function($el) {
+                $el.addEventListener('click', function() {
+                    var target = $el.dataset.target;
+                    var $target = document.getElementById(target);
+                    $el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
+            });
+        }
+    });
+</script>

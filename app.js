@@ -20,20 +20,26 @@ app.use(session({
 const routes = {
     oauth: require("./routes/oauth.js"),
     dashboard: require("./routes/dashboard.js"),
-    login: require("./routes/login.js")
+    login: require("./routes/login.js"),
+    logout: require("./routes/logout.js")
+}
+const tools = {
+    fetchImages: require("./tools/fetchImages.js")
 }
 
+tools.fetchImages(app)
 app.listen(3041)
 
 app.get("/", (req, res) => {
-    console.log(req.session)
     if (req.session.user == null) {
         return routes.login(req, res, app)
     }
     return routes.dashboard(req, res, app)
 
 })
-
+app.get("/css/login.css", (req, res) => {
+    res.sendFile(__dirname + "/css/login.css")
+})
 app.get("/redirect/github", (req, res) => {
     res.redirect("https://github.com/login/oauth/authorize?client_id=1bb56238ae4a63f3f744&redirect_uri=https%3A%2F%2Fdashboard.discordspark.tk%2Fcallback%2Fgithub&scope=user:email%20read:user")
 })
@@ -45,4 +51,7 @@ app.get("/callback/github", (req, res) => {
 })
 app.get("/callback/google", (req, res) => {
     routes.oauth.google(req, res, app)
+})
+app.get("/logout", (req, res) => {
+    routes.logout(req, res)
 })

@@ -3,29 +3,35 @@
 
 <head>
     <title>Spark Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/css/login.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css" />
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.9/js/all.js" integrity="sha384-8iPTk2s/jMVj81dnzb/iFR2sdA7u06vHJyyLlAd4snFpCl/SnyUjRrbdJsw1pGIl" crossorigin="anonymous"></script>
 </head>
 
 <body>
     <!--background-->
-    <div style="position:absolute; width: 100%; height:100%; top:0; left:0;background: url(&quot;https://images.unsplash.com/photo-1513708726622-aefa716650bb?ixlib=rb-0.3.5&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;s=8662009f4c1407e8b39919d618a4fe7e&amp;dpr=1&amp;auto=format&amp;fit=crop&amp;w=1000&amp;q=80&amp;cs=tinysrgb&quot;);background-position: 50% 50%;background-size: cover;z-index: -4;"></div>
-    <div class="centered container" style="margin: auto;width: 500px;text-align: center;height: 500px;position: absolute;top: 50%;left: 50%;transform: translate(-50%,-50%);background-color: rgba(0,0,0,0.8);border-radius: 11px;padding: 15px;">
-        <div class="icon" style="margin-top: 20px; height: 128px;width: 128px;text-align: center;margin-left: auto;margin-right: auto;">
-            <img src="https://beta.discordspark.tk/icons/Spark-icon-no-bg.png" style="width: inherit;height: inherit;">
+    <img id="background" style="background-image: url('<%-image.data_url%>')"/>
+    <img id="background-fallback"/>
+    <a href="<%-image.url%>" target="_blank" id="credit">
+        <span class="icon"><i class="fas fa-camera"></i></span>
+         Background by: <b><%-image.author%></b> (Unsplash)
+    </a>
+    <div id="container">
+        <div id="icon">
+            <img src="https://beta.discordspark.tk/icons/Spark-icon-no-bg.png">
         </div>
-        <h1 class="title is-4" style="color: white;">Spark Login</h1>
-        <div class="spacer" style="height: 150px;">
-        </div>
-        <a class="button is-outlined" href="/redirect/discord" style="margin-right: 10px">Login with Discord</a>
+        <h1 class="title is-4">Spark Login</h1>
+        <div id="spacer"></div>
+        <div class="btns">
+        <a id="btn-left" class="button is-outlined" href="/redirect/discord">Login with Discord</a>
         <a class="button is-outlined" href="/redirect/github">Login with GitHub</a>
+        </div>
+        <a href="https://discordspark.tk/" id="return-btn" class="button is-text">Go back to the homepage</a>
     </div>
 
-    <style>
-        body {
-            font-family: 'roboto' sans-serif;
-        }
-    </style>
+
 </body>
 
 </html>

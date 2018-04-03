@@ -11,7 +11,6 @@ module.exports = (service, id, email, name, app, req) => {
                 resolve(result)
             } else if (results[0].email == email && results[0][service + "_id"] == id) {
                 var result = await login(results[0], app, req)
-                console.log("test!")
                 resolve(result)
             } else {
                 var result = await link(service, id, email, app)

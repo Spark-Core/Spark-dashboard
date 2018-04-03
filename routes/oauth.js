@@ -41,9 +41,7 @@ async function github(req, res, app) {
         var result = verify("github", user.id, user.email, user.name, app, req)
         result
             .then(user => {
-                console.log(user)
-
-                res.send(`<html><body><p>Welcome <strong>${user.name}</strong>!</p><p>Some data we picked up:</p><p>email: <strong>${user.email}</strong></p><p>Github: <strong>${user.github_id}</strong></p><p>Api token: <strong>${user.token}</strong></p>`)
+                res.redirect("/")
             })
             .catch(code => {
                 res.sendStatus(code)
@@ -81,7 +79,6 @@ async function google(req, res, app) {
             },
             json: true
         })
-        console.log(body)
         res.redirect("/")
     } catch (e) {
         if (e) {
