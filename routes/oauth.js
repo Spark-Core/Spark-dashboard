@@ -5,7 +5,7 @@ const verify = require("../tools/verify.js")
 const config = require("../config.json")
 require("request")
 
-// auth url: https://github.com/login/oauth/authorize?client_id=1bb56238ae4a63f3f744&redirect_uri=https%3A%2F%2Fdashboard.discordspark.tk%2Fcallback%2Fgithub&scope=user:email%20read:user
+// auth url: https://github.com/login/oauth/authorize?client_id=1bb56238ae4a63f3f744&redirect_uri=https%3A%2F%2Fdashboard.discordspark.com%2Fcallback%2Fgithub&scope=user:email%20read:user
 async function github(req, res, app) {
     if (!req.query.code) {
         return res.redirect("/")
@@ -18,7 +18,7 @@ async function github(req, res, app) {
                 code: req.query.code,
                 client_id: config.github.client_id,
                 client_secret: config.github.client_secret,
-                redirect_uri: "https://dashboard.discordspark.tk/callback/github"
+                redirect_uri: "https://dashboard.discordspark.com/callback/github"
             },
             json: true
         })
@@ -58,7 +58,7 @@ async function github(req, res, app) {
     }
 }
 
-// auth url: https://accounts.google.com/o/oauth2/v2/auth?client_id=463922476306-0di60822ajkofdqqhkh2cam6qik5eqps.apps.googleusercontent.com&redirect_uri=https://dashboard.discordspark.tk/callback/google&scope=profile%20email&state=1234&response_type=code
+// auth url: https://accounts.google.com/o/oauth2/v2/auth?client_id=463922476306-0di60822ajkofdqqhkh2cam6qik5eqps.apps.googleusercontent.com&redirect_uri=https://dashboard.discordspark.com/callback/google&scope=profile%20email&state=1234&response_type=code
 async function google(req, res, app) {
     if (!req.query.code) {
         return res.redirect("/")
@@ -71,7 +71,7 @@ async function google(req, res, app) {
                 "code": req.query.code,
                 "client_id": config.google.client_id,
                 "client_secret": config.google.client_secret,
-                "redirect_uri": "https://dashboard.discordspark.tk/callback/google",
+                "redirect_uri": "https://dashboard.discordspark.com/callback/google",
                 "grant_type": "authorization_code"
             },
             headers: {
