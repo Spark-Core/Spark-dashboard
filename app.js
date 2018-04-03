@@ -14,17 +14,25 @@ app.use(session({
     secret: '*SCkyRTQU7Y4!rW4MvNNqJCGyKeDGAY%!7yJ6!EKU',
     resave: false,
     saveUninitialized: true,
-    cookie: {
-        secure: true
-    }
+    cookie: {}
 }))
+
 const routes = {
-    oauth: require("./routes/oauth.js")
+    oauth: require("./routes/oauth.js"),
+    dashboard: require("./routes/dashboard.js"),
+    login: require("./routes/login.js")
 }
 
 app.listen(3041)
 
+app.get("/", (req, res) => {
+    console.log(req.session)
+    if (req.session.user == null) {
+        return routes.login(req, res, app)
+    }
+    return routes.dashboard(req, res, app)
 
+})
 
 app.get("/redirect/github", (req, res) => {
     res.redirect("https://github.com/login/oauth/authorize?client_id=1bb56238ae4a63f3f744&redirect_uri=https%3A%2F%2Fdashboard.discordspark.tk%2Fcallback%2Fgithub&scope=user:email%20read:user")
