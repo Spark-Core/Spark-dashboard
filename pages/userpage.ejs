@@ -1,9 +1,44 @@
+<div id="background"></div>
+<div id="popup">
+    <h1 class="title is-1">Register a new bot</h1>
+    <h2 class="subtitle is-3">Fill out some details!</h2>
+    <div class="box">
+        <b><span class="icon"><i class="fas fa-exclamation-circle"></i></span> Important</b>
+        <p> This dashboard only works on v0.1.0 and higher</p>
+    </div>
+    <div class="field">
+        <label class="label">Your bot name</label>
+        <div class="control">
+            <input class="input" id="name" placeholder="Your bot's name" type="text">
+        </div>
+    </div>
+    <div class="field">
+        <div class="control">
+            <label class="checkbox">
+  <input type="checkbox" id="terms">
+  I agree to the <a href="#">terms and conditions</a>
+</label>
+        </div>
+    </div>
+    <div class="field is-grouped" style="">
+        <div class="control">
+            <button id="submit" class="button is-link" onclick="submit()">Submit</button>
+        </div>
+    </div>
+
+</div>
+<div id="popup-token">
+
+    <h1 style="vertical-align: middle;" class="title is-3">Your token <span id="copy-reminder" class="tag is-success">Copied!</span></h1>
+    <h1 class="subtitle is-6"><span class="icon"><i class="fas fa-exclamation-circle"></i></span>You will not be able to see this again.</h1>
+    <input id="token" class="input" readonly="" onclick="copy(this)" type="text"></div>
 <nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="container">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
-        <img src="https://beta.discordspark.com/icons/Spark-icon-no-bg.svg" width="32" height="32">
-    </a>
+                    <img src="https://beta.discordspark.com/icons/Spark-icon-no-bg.svg" width="32" height="32">
+            <p style="margin-left: 4px;">Dashboard</p><span style="margin-left: 6px;" class="button is-static is-outlined is-danger">Beta</span>
+                </a>
 
             <div data-target="navMenu" class="navbar-burger">
                 <span></span>
@@ -17,7 +52,8 @@
                 <a href="/" class="navbar-item"> Home </a>
             </div>
             <div class="navbar-end">
-                <a class="navbar-item" href="https://dashboard.discordspark.com/logout"><%- user.name %> <span style="color: black;margin-left:2px;margin-right:2px;">|</span> <span style="color: red;"> Logout</span></a>
+                <a class="navbar-item" href="https://dashboard.discordspark.com/logout">
+                    <%- user.name %> <span style="color: black;margin-left:2px;margin-right:2px;">|</span> <span style="color: red;"> Logout</span></a>
             </div>
         </div>
     </div>
@@ -31,42 +67,34 @@
 <section class="section">
     <div class="container">
         <div class="columns">
-            <div class="column">
-                <div class="circle" style=""><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
+            <% data.forEach((i,n) => { %>
+                <% if (i.created == false){ %>
+                    <div class="column">
+                        <div onclick="enablePopup(0)" class="circle"><i class="icon-centered fas fa-plus" style="color: white;"></i></div>
+                        <div class="label">
+                            <p>Create key</p>
+                        </div>
+                    </div>
+                    <% }else{ %>
+                        <div class="column">
+                            <div class="circle" data-id="<%- i.keyid %>" data-online="<%-i.online%>"><i class="icon-centered fas fa-server"></i></div>
+                            <div class="label">
+                                <p>
+                                    <%- i.name%>
+                                </p>
+                            </div>
+                        </div>
+                        <% } %>
+                            <% if (n == 4){%>
         </div>
+
         <div class="columns second">
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
-            <div class="column">
-                <div class="circle"><i class="fas fa-plus" style="color: white;"></i></div>
-            </div>
+            <%}%>
+                <%})%>
+
+
         </div>
 
-
-    </div>
 </section>
 <style>
     .circle {
@@ -76,26 +104,125 @@
         background-color: #2C2F33;
         margin: 0 auto;
     }
+
+    .label {
+        text-align: center;
+        width: 100%;
+    }
+
     html {
         overflow: hidden !important;
     }
+
     .second {
         margin-top: 5px;
     }
 
-    .fa-plus {
+    .circle.online {
+        background-color: lime;
+        transition: background-color 1.5s;
+    }
+
+    .circle.offline {
+        background-color: red;
+        transition: background-color 1.5s;
+    }
+
+    .icon-centered {
         position: relative;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         color: white;
         height: 30px;
-        width: 30px;
+        width: 30px !important;
+    }
+
+    #background {
+        display: none;
+    }
+
+    #background.blurred {
+        opacity: 0.8;
+        background: black;
+        z-index: 31;
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        display: block;
+    }
+
+    #copy-reminder {
+        opacity: 0;
+        transition: opacity .4s;
+    }
+
+    #copy-reminder.visible {
+        opacity: 1;
+    }
+
+    #popup-token {
+        display: none
+    }
+
+    #popup-token.popped {
+        display: block;
+        width: 500px;
+        text-align: left;
+        height: 150px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 11px;
+        padding: 19px;
+        z-index: 32;
+        box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.40);
+    }
+
+    #popup {
+        display: none;
+    }
+
+    #popup.popped {
+        display: block;
+        width: 500px;
+        text-align: left;
+        height: 450px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 11px;
+        padding: 19px;
+        z-index: 32;
+        box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.40);
     }
 </style>
 <script>
+    var enablePopup;
+    var disablePopup;
+    var submit;
+var token_enabled = false;
+    function copy(ip) {
+        ip.select()
+        document.execCommand('copy');
+        document.getElementById("copy-reminder").classList.add("visible")
+        setTimeout(() => {
+            document.getElementById("copy-reminder").classList.remove("visible")
+        }, 2000)
+    }
     document.addEventListener('DOMContentLoaded', function() {
         var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+        var $onoff = Array.prototype.slice.call(document.querySelectorAll('[data-online]'), 0);
+        var $background = document.getElementById("background")
+        $background.addEventListener('click', function() {
+            disablePopup()
+        })
         if ($navbarBurgers.length > 0) {
             $navbarBurgers.forEach(function($el) {
                 $el.addEventListener('click', function() {
@@ -106,5 +233,90 @@
                 });
             });
         }
-    });
+        if ($onoff.length > 0) {
+            $onoff.forEach(function($el) {
+                if ($el.innerHTML.includes("online=\"false\"")) {
+                    $el.classList.add("offline")
+                } else {
+                    $el.classList.add("online")
+                }
+
+            })
+        }
+        enablePopup = function(type) {
+            var $background = document.querySelectorAll('#background')[0]
+            if (type == 0) {
+                var $popup = document.querySelectorAll('#popup')[0]
+                $popup.classList.add("popped")
+            } else if (type == 1) {
+                var $popup_token = document.querySelectorAll("#popup-token")[0]
+                $popup_token.classList.add("popped")
+            }
+            $background.classList.add("blurred")
+        }
+        disablePopup = function(type) {
+            var $background = document.querySelectorAll('#background')[0]
+            if (type == 0 || !type) {
+                var $popup = document.querySelectorAll('#popup')[0]
+                $popup.classList.remove("popped")
+            }
+            if (type == 1 || !type) {
+                var $popup_token = document.querySelectorAll("#popup-token")[0]
+                $popup_token.classList.remove("popped")
+            }
+            $background.classList.remove("blurred")
+            if (token_enabled){
+                location.reload();
+            }
+        }
+        submit = function() {
+            var $submit = document.querySelectorAll('#submit')[0]
+            var $terms = document.querySelectorAll('#terms')[0]
+            var $name = document.querySelectorAll('#name')[0]
+            $submit.classList.add("is-loading")
+            $submit.onclick = null;
+            $name.disabled = true;
+            $terms.disabled = true;
+
+            if ($name.value.length == 0) {
+                alert("Name can't be empty")
+                $name.disabled = false;
+                $terms.disabled = false;
+                $submit.classList.remove("is-loading")
+                $submit.onclick = submit
+                return
+            }
+            if ($terms.checked == false) {
+                alert("You need to accept our terms and conditions before being able to submit.")
+                $name.disabled = false;
+                $terms.disabled = false;
+                $submit.classList.remove("is-loading")
+                $submit.onclick = submit
+                return
+            }
+            var payload = {
+                terms: ($terms.checked == true) ? 1 : 0,
+                name: $name.value,
+            }
+            $.ajax({
+                    type: 'POST',
+                    url: "/api/register",
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                    data: JSON.stringify(payload),
+                    dataType: "json"
+                })
+                .done((data) => {
+                    disablePopup(0)
+                    console.log(data)
+                    enablePopup(1)
+                    token_enabled = true;
+                    document.getElementById("token").value = data.token;
+                })
+                .fail((data) => {
+                    console.error(data)
+                })
+        }
+    })
 </script>
