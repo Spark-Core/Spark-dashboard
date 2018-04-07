@@ -106,6 +106,12 @@ app.get("/redirect/github", (req, res) => {
 app.get("/redirect/google", (req, res) => {
     res.redirect("https://accounts.google.com/o/oauth2/v2/auth?client_id=463922476306-0di60822ajkofdqqhkh2cam6qik5eqps.apps.googleusercontent.com&redirect_uri=https://dashboard.discordspark.com/callback/google&scope=profile%20email&state=1234&response_type=code")
 })
+app.get("/redirect/discord", (req, res) => {
+    res.redirect("https://discordapp.com/oauth2/authorize?client_id=432202494341545994&redirect_uri=https%3A%2F%2Fdashboard.discordspark.com%2Fcallback%2Fdiscord&response_type=code&scope=identify%20email")
+})
+app.get("/callback/discord", (req, res) => {
+    routes.oauth.discord(req, res, app)
+})
 app.get("/callback/github", (req, res) => {
     routes.oauth.github(req, res, app)
 })

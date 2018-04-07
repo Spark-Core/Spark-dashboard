@@ -1,4 +1,5 @@
 module.exports.github = github;
+module.exports.discord = discord;
 module.exports.google = google;
 const request = require("request-promise")
 const verify = require("../tools/verify.js")
@@ -41,22 +42,68 @@ async function github(req, res, app) {
         var result = verify("github", user.id, user.email, user.name, app, req)
         result
             .then(user => {
-                res.redirect("/")
+                return res.redirect("/")
             })
             .catch(code => {
-                res.sendStatus(code)
+                return res.sendStatus(code)
             })
-
-
-
     } catch (e) {
         if (e) {
             console.error(e)
             return res.redirect("/")
-
         }
     }
 }
+async function discord(req, res, app) {
+    if (!req.query.code) {
+        return res.redirect("/")
+    }
+    try {
+        var body = await request({
+            method: "POST",
+            uri: "https://discordapp.com/api/oauth2/token",
+            form: {
+                code: req.query.code,
+                client_id: config.discord.client_id,
+                client_secret: config.discord.client_secret,
+                redirect_uri: "https://dashboard.discordspark.com/callback/discord",
+                "grant_type": "authorization_code"
+            },
+            json: true
+        })
+        if (!body.access_token) {
+            return res.redirect("/")
+        }
+        var user = await request({
+            method: "GET",
+            uri: "https://discordapp.com/api/v6/users/@me",
+            json: true,
+            headers: {
+                Authorization: "Bearer " + body.access_token,
+                "user-agent": "Spark Dashboard"
+            }
+        })
+        if (!user.email || !user.id) {
+            return res.sendStatus(503)
+        }
+        // TODO: Add nice page here to show there is no email address linked.
+        var result = verify("discord", user.id, user.email, user.username + "#" + user.discriminator, app, req)
+        result
+            .then(user => {
+                return res.redirect("/")
+            })
+            .catch(code => {
+                return res.sendStatus(code)
+            })
+    } catch (e) {
+        if (e) {
+            console.error(e)
+            return res.redirect("/")
+        }
+    }
+}
+
+
 
 // auth url: https://accounts.google.com/o/oauth2/v2/auth?client_id=463922476306-0di60822ajkofdqqhkh2cam6qik5eqps.apps.googleusercontent.com&redirect_uri=https://dashboard.discordspark.com/callback/google&scope=profile%20email&state=1234&response_type=code
 async function google(req, res, app) {
@@ -79,7 +126,7 @@ async function google(req, res, app) {
             },
             json: true
         })
-        res.redirect("/")
+        return res.redirect("/")
     } catch (e) {
         if (e) {
             console.error(e)

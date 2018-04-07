@@ -1,6 +1,5 @@
 module.exports = (service, id, email, name, app, req) => {
     return new Promise(async function(resolve, reject) {
-
         app.connection.query("select * from users where email = ?", [email], async (err, results) => {
             if (err) {
                 console.log(err)
@@ -13,7 +12,7 @@ module.exports = (service, id, email, name, app, req) => {
                 var result = await login(results[0], app, req)
                 resolve(result)
             } else {
-                var result = await link(service, id, email, app)
+                var result = await link(service, id, email, app, req)
                 resolve(result)
             }
         })
@@ -47,5 +46,29 @@ async function login(user, app, req) {
     return new Promise(function(resolve, reject) {
         req.session.user = user;
         resolve(user)
+    });
+}
+async function link(service, id, email, app, req) {
+    return new Promise(function(resolve, reject) {
+        app.connection.query("update users set " + service + "_id = ? where email = ?", [id, email], (err, results) => {
+            if (err) {
+                return reject(500)
+            } else {
+                app.connection.query("select * from users where email = ?", [email], (err, results) => {
+                    if (err) {
+                        return reject(500)
+                    } else if (results.length == 0) {
+                        return reject(404)
+                    } else {
+                        var user = {
+                            name: results[0].name,
+                            email: results[0].email,
+                            token: resuls[0].token
+                        }
+                        return resolve(login(user, app, req))
+                    }
+                })
+            }
+        })
     });
 }
