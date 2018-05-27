@@ -1,37 +1,37 @@
 const jwt = require("jsonwebtoken")
 const config = require("./../config.json")
 module.exports = async (req, res, app) => {
-    console.log(req)
     if (!req.session.user) {
         return res.status(403).set("content-type", "application/json").send(JSON.stringify({
             message: "Not logged in.",
-            code: 001
+            code: 1
         }))
     }
-    if (typeof req.body.name != "string") {
+    if (typeof req.body.bot_id != "string") {
         return res.status(403).set("content-type", "application/json").send(JSON.stringify({
-            message: "No name specified in request",
-            code: 002
+            message: "No bot id specified in request",
+            code: 2
         }))
     }
-    if (req.body.name.length == 0) {
+    if (req.body.bot_id.length == 0) {
         return res.status(403).set("content-type", "application/json").send(JSON.stringify({
-            message: "No name specified in request",
-            code: 006
+            message: "No bot id specified in request",
+            code: 6
         }))
     }
     const result = await app.users.fetch(req.session.user.id)
     if (!result) {
         return res.status(403).set("content-type", "application/json").send(JSON.stringify({
             message: "Not logged in.",
-            code: 003
+            code: 3
         }))
     }
 
     try {
-        var token = await registerKey(app, result.id, req.body.name)
+        var data = await registerKey(app, result.id, req.body.bot_id)
         return res.json({
-            token
+            token: data.token,
+            id: data.id
         })
 
     } catch (e) {
@@ -44,7 +44,17 @@ module.exports = async (req, res, app) => {
         } else if (e == 5) {
             return res.status(402).set("content-type", "application/json").send(JSON.stringify({
                 message: "You have reached the limit of api keys",
-                code: 005
+                code: 5
+            }))
+        } else if (e == 9) {
+            return res.status(402).set("content-type", "application/json").send(JSON.stringify({
+                message: "Bot id already used",
+                code: 9
+            }))
+        } else if (e == 10) {
+            return res.status(402).set("content-type", "application/json").send(JSON.stringify({
+                message: "Bot id cannot include non-number symbols",
+                code: 010
             }))
         } else {
             console.log(e)
@@ -53,29 +63,49 @@ module.exports = async (req, res, app) => {
 }
 
 
-function registerKey(app, id, name) {
+function registerKey(app, id, bot_id) {
     return new Promise(function(resolve, reject) {
-        app.connection.query("select count(*) from apikeys where keyid = ?;", [id], (err, results) => {
+        if (isNaN(bot_id)) {
+            return reject(9)
+        }
+        app.r.db("spark").table("keys").filter({
+            userid: id
+        }).limit(11).run((err, results) => {
+
             if (err) {
                 return reject(4)
-            } else if (results[0]["count(*)"] >= 10) {
+            } else if (results.length >= 10) {
                 return reject(5)
+            } else if (results.map(i => (i.bot_id)).includes(bot_id)) {
+                return reject(10)
             }
-            app.connection.query("insert into apikeys (name, userid) values (?, ?)", [name, id], (err, result) => {
+            app.r.db("spark").table("keys").insert({
+                botid: bot_id,
+                userid: id,
+                name: "Unregistered bot",
+                status: 1,
+            }).run((err, result) => {
+
                 if (err) {
                     return reject(7)
                 }
                 var keyInfo = {
-                    key: result.insertId,
-                    name,
+                    key: result.generated_keys[0],
+                    bot_id,
                     owner: id
                 }
                 var token = jwt.sign(keyInfo, config.jwtSecret)
-                app.connection.query("update apikeys set token = ? where keyid = ?", [token, result.insertId], (err) => {
+                app.r.db("spark").table("keys").get(result.generated_keys[0]).update({
+                    token: token
+                }).run((err, d) => {
                     if (err) {
                         return reject(8)
                     }
-                    return resolve(token)
+                    console.log(d)
+                    return resolve({
+                        token,
+                        id: result.generated_keys[0]
+                    })
                 })
             })
 

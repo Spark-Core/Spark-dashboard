@@ -1,9 +1,19 @@
 const app = require('express')();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-const mysql = require("mysql")
 const config = require("./config.json")
+app.r = require("rethinkdbdash")({
+    db: "global",
+    servers: config.servers,
+    user: config.username,
+    password: config.password
+})
 var session = require('express-session')
+const RDBStore = require('session-rethinkdb')(session);
+const store = new RDBStore(app.r);
+const discord = require("discord.js")
+app.client = new discord.Client()
+app.client.login(config.discordToken)
 var socketioJwt = require('socketio-jwt');
 const jwt = require("jsonwebtoken")
 app.sio = require("socket.io")(server)
@@ -12,18 +22,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
-app.connection = mysql.createConnection({
-    host: config.host,
-    user: config.user,
-    password: config.password,
-    database: "spark"
-})
+
 app.sio.use(socketioJwt.authorize({
     secret: config.jwtSecret,
     handshake: true,
     callback: false
 }));
 app.sio.use((socket, next) => {
+
     app.connection.query("select * from apikeys where keyid = ? and token = ? and userid =?", [socket.decoded_token.key, socket.handshake.query.token, socket.decoded_token.owner], (err, results) => {
         if (err) {
             return next(err)
@@ -31,39 +37,32 @@ app.sio.use((socket, next) => {
         if (results.length == 0) {
             return next(new Error("Token is invalid or has expired."))
         }
+        if (results[0].botid != socket.decoded_token.bot_id) {
+            return next(new Error(401))
+        }
+        if (results[0].status == 1) {
+            var name = "No name found"
+            if (socket.handshake.query.bot_name) {
+                name = socket.handshake.query.bot_name
+            }
+            try {
+                app.connection.query("update apikeys set status = 0, name = ? where keyId = ? and token = ? and userid = ?", [name, socket.decoded_token.key, socket.handshake.query.token, socket.decoded_token.owner])
+            } catch (e) {
+                console.log(e)
+                return next(new Error("Couldn't verifiy your key."))
+            }
+        } else if (results[0].status > 1) {
+            return next(new Error(403))
+        }
         socket.keyInfo = results[0]
         return next()
     })
-
-
-
 })
 
-app.sio.sockets.on('connection', function(socket) {
-    console.log("Logged in successfully!")
 
-
-})
-
-var store = null;
-try {
-
-    if (require.resolve("connect-mongo")) {
-        const MongoStore = require('connect-mongo')(session);
-        store = new MongoStore({
-            host: '127.0.0.1',
-            port: '27017',
-            db: 'sessions',
-            url: 'mongodb://localhost:27017/sessions'
-        })
-    }
-} catch (e) {
-    // leave empty to ignore errors;
-}
-
-app.set('trust proxy', 1) // trust first proxy
+app.set('trust proxy', 1)
 app.use(session({
-    secret: '*SCkyRTQU7Y4!rW4MvNNqJCGyKeDGAY%!7yJ6!EKU',
+    secret: config.cookieSecret,
     saveUninitialized: false,
     resave: false,
     cookie: {
@@ -77,18 +76,22 @@ const routes = {
     dashboard: require("./routes/dashboard.js"),
     login: require("./routes/login.js"),
     logout: require("./routes/logout.js"),
-    register: require("./routes/register.js")
+    register: require("./routes/register.js"),
+    confirmedBeta: require("./routes/confirmedBeta.js"),
+    detailView: require("./routes/detailView.js"),
+    error: require("./routes/error.js")
 }
 const tools = {
     fetchImages: require("./tools/fetchImages.js"),
-    userCache: require("./tools/userCache.js")
+    userCache: require("./tools/userCache.js"),
+    socketHandler: require("./tools/socketHandler.js")
 }
 
 tools.fetchImages(app)
-app.connection.connect(() => {
-    app.users = new tools.userCache(app)
-})
-server.listen(3041)
+tools.socketHandler(app)
+app.users = new tools.userCache(app)
+
+server.listen(process.platform == 'linux' ? 3041 : 80)
 
 app.get("/", (req, res) => {
     if (req.session.user == null) {
@@ -96,6 +99,12 @@ app.get("/", (req, res) => {
     }
     return routes.dashboard(req, res, app)
 
+})
+app.get("/details/:id", (req, res) => {
+    if (req.session.user == null) {
+        return routes.login(req, res, app)
+    }
+    return routes.detailView(req, res, app)
 })
 app.get("/css/login.css", (req, res) => {
     res.sendFile(__dirname + "/css/login.css")
@@ -123,4 +132,18 @@ app.get("/logout", (req, res) => {
 })
 app.post("/api/register", (req, res) => {
     routes.register(req, res, app)
+})
+app.get("/api/confirmedBeta", routes.confirmedBeta)
+app.get("/setup", (req, res) => {
+    routes.error(req, res, 503, {
+        shortDescription: "Service Unavailable",
+        description: "The page you're looking for is not ready yet!",
+        extra: "<h1 class=\"title\">This page is currently being worked on!</h1><h2 style=\"margin-bottom: 35px;\"class=\"subtitle\">If you want to stay up to date with Spark's development, join the lounge!</h2><a href=\"https://discord.gg/TezD2Zg\" class=\"is-large button is-warning\"><span class=\"icon\" style=\"margin-right: 3px\"><i class=\"fab fa-discord\"></i></span> Spark Lounge</a>"
+    })
+})
+app.get("*", (req, res) => {
+    routes.error(req, res, 404, {
+        shortDescription: "Not found",
+        description: "The page you're looking for can't be found."
+    })
 })

@@ -1,34 +1,26 @@
 const ejs = require("ejs")
+const findClientsSocket = require("./../tools/sockets.js")
 const errorPage = require("./error.js")
 module.exports = (req, res, app) => {
-    app.connection.query("select * from apikeys where userid = ?", req.session.user.id, (err, results) => {
+    app.r.db("spark").table("keys").filter({
+        userid: req.session.user.id
+    }).run((err, results) => {
         if (err) {
             console.log(err)
-            return errorPage(res, 8)
+            return errorPage(req, res, 500, {
+                shortDescription: "Internal Server Error",
+                description: "We couldn't fetch all the data for your account.\nTry again later.",
+                extra: "<h1 class=\"title\">Does this problem keep occurring?</h1><h2 style=\"margin-bottom: 35px\">Please contact technical support staff about this issue</h2><a href=\"https://discord.gg/TezD2Zg\" class=\"is-large button is-warning\"><span class=\"icon\" style=\"margin-right: 3px\"><i class=\"fab fa-discord\"></i></span> Spark Lounge</a>"
+            })
         }
-        var data = [{
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }, {
-            created: false
-        }]
+        var data = []
+        for (i = 0; data.length < 10; i++) {
+            data.push({
+                created: false
+            })
+        }
 
-        var sockets = findClientsSocket()
+        var sockets = findClientsSocket(app)
         results.forEach(i => {
             data.pop()
             var online = (sockets.filter(s => {
@@ -41,14 +33,15 @@ module.exports = (req, res, app) => {
             }).length > 0) ? true : false;
 
             data.unshift({
-                keyid: i.keyid,
+                keyid: i.id,
                 name: i.name,
+                status: i.status,
                 online
             })
         })
 
         ejs.renderFile(__dirname + "/../pages/layouts.ejs", {
-            content: __dirname + "/../pages/userpage.ejs",
+            content: __dirname + "/../pages/overview.ejs",
             user: req.session.user,
             data,
         }, (err, string) => {
@@ -59,25 +52,4 @@ module.exports = (req, res, app) => {
             res.send(string)
         })
     })
-
-    function findClientsSocket(roomId, namespace) {
-        var res = []
-            // the default namespace is "/"
-            ,
-            ns = app.sio.of(namespace || "/");
-
-        if (ns) {
-            for (var id in ns.connected) {
-                if (roomId) {
-                    var index = ns.connected[id].rooms.indexOf(roomId);
-                    if (index !== -1) {
-                        res.push(ns.connected[id]);
-                    }
-                } else {
-                    res.push(ns.connected[id]);
-                }
-            }
-        }
-        return res;
-    }
 }

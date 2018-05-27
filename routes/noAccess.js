@@ -1,12 +1,12 @@
 const ejs = require("ejs")
-module.exports = (req, res, code, error) => {
+module.exports = (req, res, app) => {
+
     ejs.renderFile(__dirname + "/../pages/layouts.ejs", {
-        content: __dirname + "/../pages/error.ejs",
-        code,
-        error
+        content: __dirname + "/../pages/noAccess.ejs",
+        user: req.session.user,
     }, (err, string) => {
         if (err) {
-            console.error(err)
+            console.log(err)
             return res.sendStatus(500)
         }
         res.send(string)

@@ -1,6 +1,8 @@
 module.exports = (service, id, email, name, app, req) => {
     return new Promise(async function(resolve, reject) {
-        app.connection.query("select * from users where email = ?", [email], async (err, results) => {
+        app.r.db("spark").table("users").filter({
+            email
+        }).run(async (err, results) => {
             if (err) {
                 console.log(err)
                 reject(500)
@@ -25,18 +27,18 @@ async function create(service, id, email, name, app, req) {
     return new Promise(function(resolve, reject) {
         require('crypto').randomBytes(64, function(err, buffer) {
             var token = buffer.toString('hex');
-            app.connection.query(`insert into users (email, name, ${service}_id, token) values (?, ?, ?, ?)`, [email, name, id, token], (err, results) => {
+            var data = {
+                email,
+                name,
+                token
+            }
+            data[`${service}_id`] = id
+            app.r.db("spark").table("users").insert(data).run((err, data) => {
                 if (err) {
                     console.log(err)
                     return reject(500)
                 } else {
-                    var result = {
-                        email,
-                        name,
-                        token,
-                    }
-                    result[`${service}_id`] = id
-                    return resolve(login(result, app, req))
+                    return resolve(login(data, app, req))
                 }
             })
         });
@@ -50,11 +52,16 @@ async function login(user, app, req) {
 }
 async function link(service, id, email, app, req) {
     return new Promise(function(resolve, reject) {
-        app.connection.query("update users set " + service + "_id = ? where email = ?", [id, email], (err, results) => {
+        var data = {}[service + "_id"] = id
+        app.r.db("spark").table("users").filter({
+            email
+        }).update(data).run((err, results) => {
             if (err) {
                 return reject(500)
             } else {
-                app.connection.query("select * from users where email = ?", [email], (err, results) => {
+                r.table("users").filter({
+                    email
+                }).run((err, results) => {
                     if (err) {
                         return reject(500)
                     } else if (results.length == 0) {

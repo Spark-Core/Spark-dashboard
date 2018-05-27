@@ -1,0 +1,169 @@
+<nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+                    <img src="https://beta.discordspark.com/icons/Spark-icon-no-bg.svg" width="32" height="32">
+            <p style="margin-left: 4px;">Dashboard</p><span style="margin-left: 6px;" class="button is-static is-outlined is-danger">Beta</span>
+                </a>
+
+            <div data-target="navMenu" class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
+        <div class="navbar-menu" id="navMenu">
+            <div class="navbar-start">
+                <a href="/" class="navbar-item"> Home </a>
+            </div>
+            <div class="navbar-end">
+                <a class="navbar-item" href="https://dashboard.discordspark.com/logout">
+                    <%- user.name %> <span style="color: black;margin-left:2px;margin-right:2px;">|</span> <span style="color: red;"> Logout</span></a>
+            </div>
+        </div>
+    </div>
+</nav>
+<section class="section hero is-light is-medium">
+    <div class="container">
+        <article class="media" style="align-items: center;">
+            <figure class="media-left">
+                <img style="margin-top: 15px;" class="image is-128x128" <% if(data.icon){%> src=\"
+                <%- data.icon %> "
+                    <%}%> ">
+            </figure>
+            <div class="media-content" style="overflow: hidden;">
+                <h1 class="title is-1"><%- data.name %><span class="tag" style="background: #7289da;color: white;margin-left: 6px;">Bot</span><span class="tag" style="background: <%- data.status.color %>;color: white;margin-left: 6px;"><%- data.status.text %></span></h1>
+<% if (data.status.code == 0){ %>
+    <h1 class="subtitle is-5">0 external modules installed</h1>
+    <% }else if (data.status.code == 1) {%>
+    <h1 class="subtitle is-5">Waiting on installation</h1>
+    <% } else{%>
+    <h1 class="subtitle is-5">Your bot is not authorized to access the api.</h1>
+    <%} %>
+
+
+            </div>
+        </article>
+    </div>
+</section>
+<section class="section">
+    <div class="container has-text-centered">
+        <% console.log(data) %>
+        <% if (data.status.code == 1) { %>
+            <h1 class="title">Your bot has never been logged in before.</h1>
+            <h1 class="subtitle"> You will have to download the api package and enter your api key </h1>
+            <div class="control has-text-centered">
+                <label class="label" >Your api key</label>
+                <input class="input" id="key" type="password" value="<%-data.token%>" style="width: 92%;max-width: 500px;" readyonly="" />
+                <button style="margin-left: 2px;" onclick="hide()" class="button is-link"><span style="" class="icon is-medium">
+                    <i class="fas fa-eye"></i>
+                  </span></button>
+                  <button id="cpbtn" style="margin-left: 2px;" onclick="copy()" class="button is-info"><span style="" class="icon is-medium">
+                      <i class="fas fa-copy"></i>
+                    </span></button>
+            </div>
+            <a style="margin-top: 10px" href="/setup" class="button is-primary">Learn how to set this up.</a>
+            <% }else if (data.status.code > 1) {%>
+                <h1 class="title"> Your bot doesn't have access to the platform</h1>
+                <h1 class="subtitle"> This could be temporarily, contact Spark technical support for more information</h1>
+                <span class="button is-static is-large" style="margin-bottom: 8px;background-color: #ff3860;border-color:transparent; color: white;">Status code: <%- data.status.code %></span>
+                <a href="https://discord.gg/TezD2Zg" class="button is-large is-warning"><span style="margin-right: 3px;"class="icon"><i class="fab fa-discord"></i></span> Spark Lounge</a>
+                <% }else if (data.status.text == "Offline") {%>
+                    <h1 class="title">Your bot is currently offline</h1>
+                    <h1 class="subtitle">Unfortunately you can only manage modules while the bot is online.</h1>
+                    <% } else { %>
+                        <!--
+        <nav class="panel">
+          <p class="panel-heading">
+            Your installed modules
+          </p>
+          <div class="panel-block">
+            <p class="control has-icons-left">
+              <input class="input is-small" type="text" placeholder="search">
+              <span class="icon is-small is-left">
+                <i class="fas fa-search" aria-hidden="true"></i>
+              </span>
+            </p>
+          </div>
+          <a class="panel-block">
+            <span class="panel-icon">
+              <i class="fas fa-archive" aria-hidden="true"></i>
+            </span>
+            Module 1
+            <button class="button is-warning" style="margin-left: auto; margin-right: 0px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-pause-circle"></i></span> Disable</button>
+            <button class="button is-danger" style="margin-right: 0px; margin-left: 6px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-trash"></i></span> Delete</button>
+          </a>
+          <a class="panel-block">
+            <span class="panel-icon">
+              <i class="fas fa-archive" aria-hidden="true"></i>
+            </span>
+            Module 2
+            <button class="button is-warning" style="margin-left: auto; margin-right: 0px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-pause-circle"></i></span> Disable</button>
+            <button class="button is-danger" style="margin-right: 0px; margin-left: 6px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-trash"></i></span> Delete</button>
+
+          </a>
+          <a class="panel-block">
+            <span class="panel-icon">
+              <i class="fas fa-archive" aria-hidden="true"></i>
+            </span>
+            Module 3
+            <button class="button is-success" style="margin-left: auto; margin-right: 0px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-play-circle"></i></span> Enable</button>
+            <button class="button is-danger" style="margin-right: 0px; margin-left: 6px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-trash"></i></span> Delete</button>
+
+          </a>
+          <a class="panel-block">
+            <span class="panel-icon">
+              <i class="fas fa-archive" aria-hidden="true"></i>
+            </span>
+            Module 4
+            <button class="button is-warning" style="margin-left: auto; margin-right: 0px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-pause-circle"></i></span> Disable</button>
+            <button class="button is-danger" style="margin-right: 0px; margin-left: 6px;"><span class="icon" style="margin-right: 3px"><i class="fas fa-trash"></i></span> Delete</button>
+
+          </a>
+-->
+                        <% } %>
+
+                            </nav>
+    </div>
+
+</section>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("key").setAttribute("readyonly", "true")
+        var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+        if ($navbarBurgers.length > 0) {
+            $navbarBurgers.forEach(function($el) {
+                $el.addEventListener('click', function() {
+                    var target = $el.dataset.target;
+                    var $target = document.getElementById(target);
+                    $el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
+            });
+        }
+    })
+    function hide(){
+        var input = document.getElementById("key")
+        if (input.type =="password"){
+            input.type = "text"
+        }else{
+            input.type = "password"
+        }
+    }
+    function copy(){
+        var input = document.getElementById("key")
+        input.select();
+        document.execCommand("copy")
+        var button = document.getElementById("cpbtn").classList
+        button.remove("is-info")
+        button.add("is-success");
+        setTimeout(() => {
+            button.remove("is-success")
+            button.add("is-info")
+        }, 750)
+    }
+</script>

@@ -1,4 +1,4 @@
-<div id="background"></div>
+<div id="background"<% if (user.confirmedBeta != true) {%>class="blurred"<%}%>></div>
 <div id="popup">
     <h1 class="title is-1">Register a new bot</h1>
     <h2 class="subtitle is-3">Fill out some details!</h2>
@@ -7,9 +7,9 @@
         <p> This dashboard only works on v0.1.0 and higher</p>
     </div>
     <div class="field">
-        <label class="label">Your bot name</label>
+        <label class="label">Your bot's id</label>
         <div class="control">
-            <input class="input" id="name" placeholder="Your bot's name" type="text">
+            <input class="input" id="id" placeholder="Your bot's id" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onpaste="this.value=this.value.replace(/[^\d]/g,'')" type="text">
         </div>
     </div>
     <div class="field">
@@ -25,13 +25,19 @@
             <button id="submit" class="button is-link" onclick="submit()">Submit</button>
         </div>
     </div>
-
 </div>
-<div id="popup-token">
+<div id="popup-reminder" <% if (user.confirmedBeta != true) {%>class="popped"<%}%> >
+    <h1 class="title is-3"><i class="fas fa-exclamation-circle"></i></span> Important</h1>
+    <h1 class="subtitle is-6" style="margin-top: 10px;">This dashboard is being tested and we can't guarantee full usage. Keys could be revoked at any moment.</h1>
+    <button class="button is-success" onclick="disablePopup(2); confirmedBeta();">Proceed</button>
+    <a href="/logout" class="button is-text">Log me out</a>
+    </div>
 
-    <h1 style="vertical-align: middle;" class="title is-3">Your token <span id="copy-reminder" class="tag is-success">Copied!</span></h1>
-    <h1 class="subtitle is-6"><span class="icon"><i class="fas fa-exclamation-circle"></i></span>You will not be able to see this again.</h1>
-    <input id="token" class="input" readonly="" onclick="copy(this)" type="text"></div>
+<div id="popup-token">
+    <h1 style="vertical-align: middle;" class="title is-3"> Your bot information <span id="copy-reminder" class="tag is-success">Copied!</span></h1>
+
+    <input id="token" class="input" readonly="" onclick="copy(this)" type="text">
+</div>
 <nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="container">
         <div class="navbar-brand">
@@ -77,7 +83,15 @@
                     </div>
                     <% }else{ %>
                         <div class="column">
-                            <div class="circle" data-id="<%- i.keyid %>" data-online="<%-i.online%>"><i class="icon-centered fas fa-server"></i></div>
+                            <% if (i.status == 0){ %>
+                                <% console.log(i.status)%>
+                            <div class="circle" data-id="<%- i.keyid %>" title="<%- i.name %>" data-online="<%-i.online%>"><i class="icon-centered fas fa-server"></i></div>
+                            <% } else if (i.status == 1){ %>
+                            <div class="circle" data-id="<%- i.keyid %>" title="Click for instructions to verify your bot." data-online="unverified"><i class="icon-centered fas fa-spinner fa-spin"></i></div>
+                            <% }else { %>
+                                <div class="circle" data-id="Error" title="Unknown error" data-online="<%-i.online%>"><i data-online="false" class="icon-centered fas fa-times"></i></div>
+                                <% i.name = "An unknown error occurred" %>
+                                <%}%>
                             <div class="label">
                                 <p>
                                     <%- i.name%>
@@ -103,8 +117,8 @@
         border-radius: 50%;
         background-color: #2C2F33;
         margin: 0 auto;
+        cursor: pointer;
     }
-
     .label {
         text-align: center;
         width: 100%;
@@ -118,21 +132,9 @@
         margin-top: 5px;
     }
 
-    .circle.online {
-        background-color: lime;
-        transition: background-color 1.5s;
-    }
-
-    .circle.offline {
-        background-color: red;
-        transition: background-color 1.5s;
-    }
-
     .icon-centered {
         position: relative;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        margin: 23px;
         color: white;
         height: 30px;
         width: 30px !important;
@@ -186,7 +188,15 @@
     #popup {
         display: none;
     }
-
+    .circle[data-online="unverified"] {
+        background-color: #6b6d70;
+    }
+    .circle[data-online="true"] {
+        background-color: lime;
+    }
+    .circle[data-online="false"] {
+        background-color: red;
+    }
     #popup.popped {
         display: block;
         width: 500px;
@@ -202,12 +212,31 @@
         z-index: 32;
         box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.40);
     }
+    #popup-reminder {
+        display: none;
+    }
+
+    #popup-reminder.popped {
+        display: block;
+        width: 500px;
+        text-align: left;
+        height: 200px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 11px;
+        padding: 19px;
+        z-index: 32;
+        box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.40);
+    }
 </style>
 <script>
     var enablePopup;
     var disablePopup;
     var submit;
-var token_enabled = false;
+    var token_enabled = false;
     function copy(ip) {
         ip.select()
         document.execCommand('copy');
@@ -216,9 +245,14 @@ var token_enabled = false;
             document.getElementById("copy-reminder").classList.remove("visible")
         }, 2000)
     }
+    function confirmedBeta(){
+        $.get("/api/confirmedBeta")
+    }
     document.addEventListener('DOMContentLoaded', function() {
+        $(".circle[data-id]").click(function(){
+            window.location = "/details/" + $(this).attr("data-id")
+        })
         var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-        var $onoff = Array.prototype.slice.call(document.querySelectorAll('[data-online]'), 0);
         var $background = document.getElementById("background")
         $background.addEventListener('click', function() {
             disablePopup()
@@ -233,16 +267,7 @@ var token_enabled = false;
                 });
             });
         }
-        if ($onoff.length > 0) {
-            $onoff.forEach(function($el) {
-                if ($el.innerHTML.includes("online=\"false\"")) {
-                    $el.classList.add("offline")
-                } else {
-                    $el.classList.add("online")
-                }
 
-            })
-        }
         enablePopup = function(type) {
             var $background = document.querySelectorAll('#background')[0]
             if (type == 0) {
@@ -250,6 +275,9 @@ var token_enabled = false;
                 $popup.classList.add("popped")
             } else if (type == 1) {
                 var $popup_token = document.querySelectorAll("#popup-token")[0]
+                $popup_token.classList.add("popped")
+            } else if (type == 2) {
+                var $popup_token = document.querySelectorAll("#popup-reminder")[0]
                 $popup_token.classList.add("popped")
             }
             $background.classList.add("blurred")
@@ -264,23 +292,28 @@ var token_enabled = false;
                 var $popup_token = document.querySelectorAll("#popup-token")[0]
                 $popup_token.classList.remove("popped")
             }
+            if (type == 2 || !type) {
+                var $popup_token = document.querySelectorAll("#popup-reminder")[0]
+                $popup_token.classList.remove("popped")
+            }
             $background.classList.remove("blurred")
-            if (token_enabled){
+            if (token_enabled) {
                 location.reload();
             }
         }
+
         submit = function() {
             var $submit = document.querySelectorAll('#submit')[0]
             var $terms = document.querySelectorAll('#terms')[0]
-            var $name = document.querySelectorAll('#name')[0]
+            var $bot_id = document.querySelectorAll('#id')[0]
             $submit.classList.add("is-loading")
             $submit.onclick = null;
-            $name.disabled = true;
+            $bot_id.disabled = true;
             $terms.disabled = true;
 
-            if ($name.value.length == 0) {
-                alert("Name can't be empty")
-                $name.disabled = false;
+            if ($bot_id.value.length == 0) {
+                alert("id can't be empty")
+                $bot_id.disabled = false;
                 $terms.disabled = false;
                 $submit.classList.remove("is-loading")
                 $submit.onclick = submit
@@ -288,7 +321,7 @@ var token_enabled = false;
             }
             if ($terms.checked == false) {
                 alert("You need to accept our terms and conditions before being able to submit.")
-                $name.disabled = false;
+                $bot_id.disabled = false;
                 $terms.disabled = false;
                 $submit.classList.remove("is-loading")
                 $submit.onclick = submit
@@ -296,7 +329,7 @@ var token_enabled = false;
             }
             var payload = {
                 terms: ($terms.checked == true) ? 1 : 0,
-                name: $name.value,
+                bot_id: $bot_id.value,
             }
             $.ajax({
                     type: 'POST',
@@ -309,9 +342,10 @@ var token_enabled = false;
                 })
                 .done((data) => {
                     disablePopup(0)
-                    console.log(data)
                     enablePopup(1)
                     token_enabled = true;
+                    console.log(data)
+                    window.location = "/details/" + data.id
                     document.getElementById("token").value = data.token;
                 })
                 .fail((data) => {
