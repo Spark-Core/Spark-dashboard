@@ -1,4 +1,4 @@
-<div id="background"<% if (user.confirmedBeta != true) {%>class="blurred"<%}%>></div>
+<div id="background"></div>
 <div id="popup">
     <h1 class="title is-1">Register a new bot</h1>
     <h2 class="subtitle is-3">Fill out some details!</h2>
@@ -26,7 +26,7 @@
         </div>
     </div>
 </div>
-<div id="popup-reminder" <% if (user.confirmedBeta != true) {%>class="popped"<%}%> >
+<div id="popup-reminder">
     <h1 class="title is-3"><i class="fas fa-exclamation-circle"></i></span> Important</h1>
     <h1 class="subtitle is-6" style="margin-top: 10px;">This dashboard is being tested and we can't guarantee full usage. Keys could be revoked at any moment.</h1>
     <button class="button is-success" onclick="disablePopup(2); confirmedBeta();">Proceed</button>
@@ -58,8 +58,12 @@
                 <a href="/" class="navbar-item"> Home </a>
             </div>
             <div class="navbar-end">
-                <a class="navbar-item" href="https://dashboard.discordspark.com/logout">
-                    <%- user.name %> <span style="color: black;margin-left:2px;margin-right:2px;">|</span> <span style="color: red;"> Logout</span></a>
+                <a class="navbar-item" href="https://dashboard.discordspark.com/user">
+                    <%- user.name %>
+                </a>
+                <a class="navbar-item" style="color: red" href="https://dashboard.discordspark.com/logout">
+                    Logout
+                </a>
             </div>
         </div>
     </div>
@@ -235,6 +239,7 @@
 <script>
     var enablePopup;
     var disablePopup;
+    var confirmedBeta;
     var submit;
     var token_enabled = false;
     function copy(ip) {
@@ -245,10 +250,9 @@
             document.getElementById("copy-reminder").classList.remove("visible")
         }, 2000)
     }
-    function confirmedBeta(){
-        $.get("/api/confirmedBeta")
-    }
+
     document.addEventListener('DOMContentLoaded', function() {
+
         $(".circle[data-id]").click(function(){
             window.location = "/details/" + $(this).attr("data-id")
         })
@@ -282,6 +286,13 @@
             }
             $background.classList.add("blurred")
         }
+        <% if (!user.beta_accept){ %>
+            enablePopup(2)
+            confirmedBeta = () => {
+                $.get("/api/beta_accept")
+            }
+
+        <% } %>
         disablePopup = function(type) {
             var $background = document.querySelectorAll('#background')[0]
             if (type == 0 || !type) {

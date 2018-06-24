@@ -3,7 +3,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const config = require("./config.json")
 app.r = require("rethinkdbdash")({
-    db: "global",
+    db: "spark",
     servers: config.servers,
     user: config.username,
     password: config.password
@@ -30,10 +30,15 @@ app.sio.use(socketioJwt.authorize({
 }));
 app.sio.use((socket, next) => {
 
-    app.connection.query("select * from apikeys where keyid = ? and token = ? and userid =?", [socket.decoded_token.key, socket.handshake.query.token, socket.decoded_token.owner], (err, results) => {
+    app.r.table("keys").filter({
+        keyid: socket.decoded_token.key,
+        token: socket.handshake.query.token,
+        userid: socket.decoded_token.owner
+    }).run((err, results) => {
         if (err) {
             return next(err)
         }
+        console.log(results)
         if (results.length == 0) {
             return next(new Error("Token is invalid or has expired."))
         }
@@ -46,11 +51,24 @@ app.sio.use((socket, next) => {
                 name = socket.handshake.query.bot_name
             }
             try {
-                app.connection.query("update apikeys set status = 0, name = ? where keyId = ? and token = ? and userid = ?", [name, socket.decoded_token.key, socket.handshake.query.token, socket.decoded_token.owner])
+                app.r.table("keys").filter({
+                    keyid: socket.decoded_token.key,
+                    token: socket.handshake.query.token,
+                    userid: socket.decoded_token.owner
+                }).update({
+                    status: 0,
+                    name: name
+                }).run((err, result) => {
+                    if (err) {
+                        return console.error(err)
+                    }
+                    console.log(result)
+                })
             } catch (e) {
                 console.log(e)
                 return next(new Error("Couldn't verifiy your key."))
             }
+            console.log(results)
         } else if (results[0].status > 1) {
             return next(new Error(403))
         }
@@ -77,9 +95,10 @@ const routes = {
     login: require("./routes/login.js"),
     logout: require("./routes/logout.js"),
     register: require("./routes/register.js"),
-    confirmedBeta: require("./routes/confirmedBeta.js"),
+    beta_accept: require("./routes/beta_accept.js"),
     detailView: require("./routes/detailView.js"),
-    error: require("./routes/error.js")
+    error: require("./routes/error.js"),
+    settings: require("./routes/usersettings.js")
 }
 const tools = {
     fetchImages: require("./tools/fetchImages.js"),
@@ -133,7 +152,9 @@ app.get("/logout", (req, res) => {
 app.post("/api/register", (req, res) => {
     routes.register(req, res, app)
 })
-app.get("/api/confirmedBeta", routes.confirmedBeta)
+app.get("/api/beta_accept", (req, res) => {
+    routes.beta_accept(req, res, app)
+})
 app.get("/setup", (req, res) => {
     routes.error(req, res, 503, {
         shortDescription: "Service Unavailable",
@@ -146,4 +167,10 @@ app.get("*", (req, res) => {
         shortDescription: "Not found",
         description: "The page you're looking for can't be found."
     })
+})
+app.get("/user", (req, res, app) => {
+    if (!req.session.user) {
+        res.redirect("/")
+    }
+    routes.settings(req, res, app)
 })

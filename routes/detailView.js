@@ -6,6 +6,7 @@ module.exports = async (req, res, app) => {
     var id = req.params.id
     var userdata = await KeyAccess(app, id, req.session.user)
     if (!userdata) {
+        console.log(userdata)
         return noAccess(req, res, app)
     }
     if (userdata.status == 1) {
@@ -43,8 +44,11 @@ module.exports = async (req, res, app) => {
 
 function KeyAccess(app, id, user) {
     return new Promise(function(resolve, reject) {
+        console.log(id, user.id)
         app.r.db("spark").table("keys").get(id)
             .run((err, results) => {
+                console.log("-----")
+                console.log(err, results)
                 if (err) {
                     return resolve(false)
                 }
